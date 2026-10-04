@@ -1,5 +1,5 @@
 // PreToolUse: テストを消す編集と、人間がやるべき git/gh 操作を止める
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const input = JSON.parse(readFileSync(0, "utf8"));
 const { tool_name: tool, tool_input: t = {} } = input;
@@ -14,6 +14,17 @@ function deny(reason) {
 const count = (s = "", re) => (s.match(re) || []).length;
 const TEST_FILE = /(^|\/)(tests|e2e)\//;
 const CASES = /\b(it|test)(\.skip|\.only)?\s*\(|expect\s*\(/g;
+
+// Write はファイル全体の書き直し。既存のテストファイルなら、今の中身と比べる
+if (tool === "Write" && TEST_FILE.test(t.file_path ?? "") && existsSync(t.file_path)) {
+  const before = readFileSync(t.file_path, "utf8");
+  if (count(t.content, CASES) < count(before, CASES)) {
+    deny("既存のテストファイルを、テストケースや expect が減る形で書き直すことはできません。");
+  }
+  if (count(t.content, /\.(skip|only)\s*\(/g) > count(before, /\.(skip|only)\s*\(/g)) {
+    deny("テストを skip / only にする書き直しはできません。");
+  }
+}
 
 if (tool === "Edit" && TEST_FILE.test(t.file_path ?? "")) {
   if (count(t.new_string, CASES) < count(t.old_string, CASES)) {

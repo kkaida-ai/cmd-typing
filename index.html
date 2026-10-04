@@ -12,6 +12,12 @@
     <p id="prompt" data-testid="prompt"></p>
     <input id="answer" data-testid="answer" autocomplete="off" spellcheck="false" />
     <p>スコア: <span id="score" data-testid="score">0</span></p>
+    <p>コンボ: <span id="combo" data-testid="combo">0</span></p>
+    <p>残り時間: <span id="time" data-testid="time">60</span>秒</p>
+    <section id="result" data-testid="result" hidden>
+      <p>終了！ スコア: <span id="final-score" data-testid="final-score"></span> / 最大コンボ: <span id="final-combo" data-testid="final-combo"></span></p>
+      <button id="retry" data-testid="retry">もう一度</button>
+    </section>
   </main>
   <script type="module" src="/src/main.ts"></script>
 </body>

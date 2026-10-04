@@ -40,3 +40,15 @@ test("60秒たつと結果が出て入力できなくなり、もう一度で再
   await expect(page.getByTestId("answer")).toBeEnabled();
   await expect(page.getByTestId("score")).toHaveText("0");
 });
+
+test("2回プレイするとランキングに2件表示される", async ({ page }) => {
+  await page.clock.install();
+  await page.goto("/");
+  await answerCurrent(page);
+  await page.clock.runFor(61_000);
+  await expect(page.getByTestId("ranking").locator("li")).toHaveText(["1. 1"]);
+  await page.getByTestId("retry").click();
+  await page.getByTestId("answer").press("a"); // 最初の入力でタイマーが動き出す
+  await page.clock.runFor(61_000);
+  await expect(page.getByTestId("ranking").locator("li")).toHaveText(["1. 1", "2. 0"]);
+});

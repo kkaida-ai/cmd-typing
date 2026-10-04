@@ -1,4 +1,5 @@
 import { WORDS } from "./words";
+import { record, type Entry } from "./ranking";
 import { current, isOver, start, submit, tick } from "./game";
 
 const q = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
@@ -10,12 +11,24 @@ const time = q<HTMLSpanElement>("#time");
 const result = q<HTMLElement>("#result");
 const finalScore = q<HTMLSpanElement>("#final-score");
 const finalCombo = q<HTMLSpanElement>("#final-combo");
-const retry = q<HTMLButtonElement>("#retry");
+const ranking = q<HTMLUListElement>("#ranking");
+const retry =q<HTMLButtonElement>("#retry");
 
 const TICK_MS = 100;
 let state = start();
 let timer: number | undefined;
 let lastTime = 0;
+let saved = false;
+
+function renderRanking(entries: Entry[]) {
+  ranking.replaceChildren(
+    ...entries.map((e, i) => {
+      const li = document.createElement("li");
+      li.textContent = `${i + 1}. ${e.score}`;
+      return li;
+    }),
+  );
+}
 
 function render() {
   prompt.textContent = current(WORDS, state);
@@ -25,6 +38,14 @@ function render() {
   if (isOver(state)) {
     finalScore.textContent = String(state.score);
     finalCombo.textContent = String(state.maxCombo);
+    if (!saved) {
+      saved = true;
+      try {
+        renderRanking(record(localStorage, state.score));
+      } catch {
+        // localStorage が使えなくてもゲームは続けられる
+      }
+    }
     result.hidden = false;
     answer.disabled = true;
   }
@@ -60,6 +81,7 @@ answer.addEventListener("keydown", (e) => {
 retry.addEventListener("click", () => {
   stopTimer();
   state = start();
+  saved = false;
   result.hidden = true;
   answer.disabled = false;
   answer.value = "";
